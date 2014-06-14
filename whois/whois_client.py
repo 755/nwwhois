@@ -30,9 +30,7 @@ THE SOFTWARE.
               Id:  $Id$
           Author:  Chris Wolf
 """
-import sys
 import socket
-import optparse
 #import pdb
 
 
@@ -81,7 +79,7 @@ class NICClient(object):
         #pdb.set_trace()
         #print 'response', response
         response = enforce_ascii(response)
-        print 'returning whois response'
+        #print 'returning whois response'
         return response.decode()
 
     def whois_http(self, query):

@@ -30,7 +30,7 @@ def cast_date(s):
     for known_format in known_formats:
         try:
             return datetime.strptime(s.strip(), known_format)
-        except ValueError as e:
+        except ValueError:
             pass  # Wrong format, keep trying
     return s
 
@@ -97,12 +97,10 @@ class WhoisEntry(object):
         """
         return '\n'.join('%s: %s' % (attr, str(getattr(self, attr))) for attr in self.attrs())
 
-
     def attrs(self):
         """Return list of attributes that can be extracted for this domain
         """
         return sorted(self._regex.keys())
-
 
     @staticmethod
     def load(domain, text):
