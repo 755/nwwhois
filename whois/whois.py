@@ -12,10 +12,10 @@ class WhoisException(BaseException):
 class Whois:
 
     def __init__(self, domain):
-        self._whois_text = None
+        self._whois_raw = None
         self.domain = domain
         # clean domain to expose netloc
-        self.sub_domain, self.tlds = self.extract_domain(domain)
+        self.sub_domain, self.tlds = self._extract_domain(domain)
 
         script_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -36,14 +36,20 @@ class Whois:
         self.nic_client = NICClient(self.whois_server[0])
 
     @property
-    def whois_text(self):
-        if self._whois_text is None:
-            self._whois_text = self.nic_client.whois_lookup(self.domain)
-        return self._whois_text
+    def _whois_text(self):
+        if self._whois_raw is None:
+            self._whois_raw = self.nic_client.whois_lookup(self.domain)
+        return self._whois_raw
+
+    def whois_raw(self):
+        if self.whois_server[0].startswith('http'):
+            return ''
+        else:
+            return self._whois_text
 
     def info(self):
         try:
-            return WhoisEntry.load(self.domain, self.whois_text)
+            return WhoisEntry.load(self.domain, self._whois_text)
         except PywhoisError:
             raise WhoisException
 
@@ -53,7 +59,7 @@ class Whois:
         except KeyError:
             not_found_string = ''
 
-        m = re.search(not_found_string, self.whois_text)
+        m = re.search(not_found_string, self._whois_text)
 
         if not m is None:
             return True
@@ -61,7 +67,7 @@ class Whois:
             return False
 
     @staticmethod
-    def extract_domain(search_url):
+    def _extract_domain(search_url):
         """Extract the domain from the given URL
         """
         m = re.match(r'^([a-zA-Z\d\-]+).([a-zA-Z\.\-\d]+)$', search_url)
