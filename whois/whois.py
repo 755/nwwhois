@@ -64,12 +64,10 @@ class Whois:
     def extract_domain(search_url):
         """Extract the domain from the given URL
         """
-        #todo: add re
-        #m = re.search(r'^([\w]+)$', search_url)
-        m = search_url.split('.')
+        m = re.match(r'^([a-zA-Z\d\-]+).([a-zA-Z\.\-\d]+)$', search_url)
         if m:
-            sub_domain = m[0]
-            tlds = m[1]
+            sub_domain = m.group(1)
+            tlds = m.group(2)
             return sub_domain, tlds
         else:
             raise WhoisException('Invalid domain')
