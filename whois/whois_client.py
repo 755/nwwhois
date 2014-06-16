@@ -31,7 +31,7 @@ THE SOFTWARE.
           Author:  Chris Wolf
 """
 import socket
-#import pdb
+import urllib2
 
 
 def enforce_ascii(a):
@@ -50,11 +50,13 @@ def enforce_ascii(a):
 
 class NICClient(object):
 
-    def __init__(self, whois_server):
+    def __init__(self, whois_server, timeout=30):
         self.whois_server = whois_server
+        self.timeout = timeout
 
     def whois_ns(self, query):
-        """Perform initial lookup with TLD whois server
+        """
+        Perform initial lookup with TLD whois server
         then, if the quick flag is false, search that result
         for the region-specifc whois server and do a lookup
         there for contact details
@@ -63,6 +65,7 @@ class NICClient(object):
         #print 'parameters given:', query, hostname, flags
         #pdb.set_trace()
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(self.timeout)
         s.connect((self.whois_server, 43))
         #send takes bytes as an input
         queryBytes = (query + "\r\n").encode()
@@ -76,18 +79,27 @@ class NICClient(object):
             if not d:
                 break
         s.close()
-        #pdb.set_trace()
-        #print 'response', response
         response = enforce_ascii(response)
-        #print 'returning whois response'
         return response.decode()
 
     def whois_http(self, query):
-        #todo: add http
-        pass
+
+        url = "%s%s" % (self.whois_server, query)
+
+        req = urllib2.Request(url)
+
+        try:
+            response = urllib2.urlopen(req, timeout=self.timeout).read()
+        except urllib2.URLError:
+            response = ''
+
+        return response
    
     def whois_lookup(self, query):
 
-        result = self.whois_ns(query)
-        #print 'whois_lookup finished'
+        if self.whois_server.startswith('http'):
+            result = self.whois_http(query)
+        else:
+            result = self.whois_ns(query)
+
         return result
