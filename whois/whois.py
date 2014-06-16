@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import socket
 from whois_client import NICClient
 from parser import WhoisEntry, PywhoisError
 
@@ -38,7 +39,10 @@ class Whois:
     @property
     def _whois_text(self):
         if self._whois_raw is None:
-            self._whois_raw = self.nic_client.whois_lookup(self.domain)
+            try:
+                self._whois_raw = self.nic_client.whois_lookup(self.domain)
+            except socket.error:
+                raise WhoisException('Nslookup error')
         return self._whois_raw
 
     def whois_raw(self):
